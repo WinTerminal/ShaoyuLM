@@ -1,17 +1,20 @@
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates unzip \
+    curl ca-certificates jq \
     && rm -rf /var/lib/apt/lists/*
 
-# 下载 llama.cpp 预编译二进制
-ARG LLAMA_VERSION=b4585
-RUN curl -L -o /tmp/llama.zip \
-    "https://github.com/ggerganov/llama.cpp/releases/download/${LLAMA_VERSION}/llama-${LLAMA_VERSION}-bin-ubuntu-x64.zip" \
-    && unzip /tmp/llama.zip -d /opt/llama \
+# 动态获取 llama.cpp 最新非 draft tag（含 pre-release）
+RUN LATEST=$(curl -sL "https://api.github.com/repos/ggerganov/llama.cpp/releases?per_page=10" \
+        | jq -r '[.[] | select(.draft == false)][0].tag_name') \
+    && echo "llama.cpp tag: ${LATEST}" \
+    && curl -L -f -o /tmp/llama.tar.gz \
+       "https://github.com/ggerganov/llama.cpp/releases/download/${LATEST}/llama-${LATEST}-bin-ubuntu-x64.tar.gz" \
+    && mkdir -p /opt/llama \
+    && tar -xzf /tmp/llama.tar.gz -C /opt/llama \
     && find /opt/llama -name "llama-server" -exec cp {} /usr/local/bin/ \; \
     && chmod +x /usr/local/bin/llama-server \
-    && rm -rf /tmp/llama.zip
+    && rm -rf /tmp/llama.tar.gz
 
 WORKDIR /app
 
