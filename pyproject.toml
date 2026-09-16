@@ -1,0 +1,13 @@
+[project]
+name = "shaoyu-lm"
+version = "0.1.0"
+description = "少羽模型 Web Chat（MiniMind 微调 + Flask + React）"
+requires-python = ">=3.10"
+dependencies = [
+    "flask>=3.0.0",
+    "torch>=2.0.0",
+    "transformers>=4.40.0",
+]
+
+[tool.uv]
+package = false
